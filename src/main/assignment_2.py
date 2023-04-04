@@ -49,9 +49,9 @@ def get_approximate_result(matrix, x_points, value, start):
 
         reoccuring_x_span *= (value - x_points[index - 1])
 
-        mult_operation = polynomial_coefficient * reoccuring_x_span
+        mlt_operation = polynomial_coefficient * reoccuring_x_span
 
-        reoccuring_px_result += mult_operation
+        reoccuring_px_result += mlt_operation
 
     print(reoccuring_px_result)
 
