@@ -1,3 +1,6 @@
+import numpy as np
+np.set_printoptions(precision=7, suppress=True, linewidth=100)
+
 print("\n ---------------1-------------------- \n")
 def neville(x, y, target):
     n = len(x)
@@ -14,152 +17,139 @@ y = [1.675, 1.436, 1.318]
 target = 3.7
 result = neville(x, y, target)
 
-print("The 2nd degree interpolating value for f(3.7) is: ", result)
+print(result)
 print("\n --------------2--------------------- \n")
 
-def newton_forward(x, y):
-    n = len(x)
-    diff_table = [[0] * (n-i) for i in range(n)]
-    for i in range(n):
-        diff_table[i][0] = y[i]
-    for j in range(1, n):
-        for i in range(n-j):
-            diff_table[i][j] = diff_table[i+1][j-1] - diff_table[i][j-1]
-    return diff_table
 
-def compute_coefficients(x, diff_table, degree):
-    coefficient = diff_table[0][0]
-    term = 1
-    for i in range(1, degree+1):
-        term = term * (x - i + 1) / i
-        coefficient += term * diff_table[0][i]
-    return coefficient
+def divided_difference_table(x_points, y_points):
+    size = len(x_points)
+    matrix = np.zeros((size, size))
+    list = []
 
-x = [7.2, 7.4, 7.5, 7.6]
-y = [23.5492, 25.3913, 26.8224, 27.4589]
-diff_table = newton_forward(x, y)
+    for i in range(size):
+        matrix[i][0] = y_points[i]
 
-for degree in range(1, 4):
-    print(f"Degree {degree} polynomial approximation:")
-    print("P(x) = ", end="")
-    for i in range(degree+1):
-        coefficient = compute_coefficients(x[0], diff_table, i)
-        if i > 0:
-            print(" + ", end="")
-        print(f"{coefficient:.4f}", end="")
-        for j in range(i):
-            print(f"(x - {x[j]:.1f})", end="")
-    print("\n")
+    for i in range(1, size):
+        for j in range(1, i + 1):
+            matrix[i][j] = (matrix[i][j - 1] - matrix[i - 1][j - 1]) / (x_points[i] - x_points[i - j])
+
+            if i == j:
+                list.append(matrix[i][j])
+
+    print(list)
+    return matrix
+
+
+def get_approximate_result(matrix, x_points, value, start):
+    reoccuring_x_span = 1
+    reoccuring_px_result = start
+
+    for index in range(1, len(matrix)):
+        polynomial_coefficient = matrix[index][index]
+
+        reoccuring_x_span *= (value - x_points[index - 1])
+
+        mult_operation = polynomial_coefficient * reoccuring_x_span
+
+        reoccuring_px_result += mult_operation
+
+    print(reoccuring_px_result)
+
+x_points = [7.2, 7.4, 7.5, 7.6]
+y_points = [23.5492, 25.3913, 26.8224, 27.4589]
+divided_table = divided_difference_table(x_points, y_points)
+
 
 print("\n ---------------3-------------------- \n")
 
-def newton_forward(x, y):
-    n = len(x)
-    diff_table = [[0] * (n-i) for i in range(n)]
-    for i in range(n):
-        diff_table[i][0] = y[i]
-    for j in range(1, n):
-        for i in range(n-j):
-            diff_table[i][j] = diff_table[i+1][j-1] - diff_table[i][j-1]
-    return diff_table
+get_approximate_result(divided_table, x_points, 7.3, y_points[0])
+print()
 
-def compute_coefficients(x, diff_table, degree):
-    coefficient = diff_table[0][0]
-    term = 1
-    for i in range(1, degree+1):
-        term = term * (x - i + 1) / i
-        coefficient += term * diff_table[0][i]
-    return coefficient
-
-x = [7.2, 7.4, 7.5, 7.6]
-y = [23.5492, 25.3913, 26.8224, 27.4589]
-diff_table = newton_forward(x, y)
-
-print("Degree 1 polynomial approximation:")
-degree = 1
-P = compute_coefficients(x[0], diff_table, degree)
-print(f"P({7.3}) = {P:.4f}")
-
-print("\nDegree 2 polynomial approximation:")
-degree = 2
-P = compute_coefficients(x[0], diff_table, degree)
-P += compute_coefficients(x[1], diff_table, degree-1) * (7.3 - x[0])
-print(f"P({7.3}) = {P:.4f}")
-
-print("\nDegree 3 polynomial approximation:")
-degree = 3
-P = compute_coefficients(x[0], diff_table, degree)
-P += compute_coefficients(x[1], diff_table, degree-1) * (7.3 - x[0])
-P += compute_coefficients(x[2], diff_table, degree-2) * (7.3 - x[0]) * (7.3 - x[1])
-print(f"P({7.3}) = {P:.4f}")
-
-print("\n -----------------4------------------ \n")
-
-import numpy as np
-
-x = np.array([3.6, 3.8, 3.9])
-y = np.array([1.675, 1.436, 1.318])
-y_prime = np.array([-1.195, -1.188, -1.182])
-
-# Construct the divided difference table
-n = len(x)
-table = np.zeros((2*n, 2*n))
-table[::2, 0] = x
-table[1::2, 0] = x
-table[::2, 1] = y
-table[1::2, 1] = y_prime
-
-for j in range(2, 2*n):
-    for i in range(2*n-j):
-        if table[i, 0] == table[i+j-1, 0]:
-            table[i, j] = table[i+1, j-1] / np.math.factorial(j-1)
-        else:
-            table[i, j] = (table[i+1, j-1] - table[i, j-1]) / (table[i+j-1, 0] - table[i, 0])
-
-# Print the Hermite polynomial approximation matrix
-print("Hermite polynomial approximation matrix:")
-print(table)
-
-print("\n ----------------5------------------- \n")
+print("\n ---------------4-------------------- \n")
 
 
-from scipy import interpolate
+def apply_div_diff(matrix):
+    size = len(matrix)
+    for i in range(2, size):
+        for j in range(2, i + 2):
 
-x = np.array([2, 5, 8, 10])
-y = np.array([3, 5, 7, 9])
+            if j >= len(matrix[i]) or matrix[i][j] != 0:
+                continue
 
-# Use cubic spline interpolation to find the coefficients of the cubic polynomials
-spline = interpolate.CubicSpline(x, y, bc_type='natural')
-a = spline.c
-b = spline.derivative(nu=1)
-d = np.zeros_like(a)
-d[:-1] = 3 * (a[1:] - a[:-1]) / (x[1:] - x[:-1]) - 2 * b[:-1] - b[1:]
-d[-1] = 0
+            # something get left and diag left
+            left = matrix[i][j - 1]
+            diag_left = matrix[i - 1][j - 1]
+            numerator = left - diag_left
 
-# Construct the matrix A and vector b
-n = len(x) - 1
-A = np.zeros((4*n, 4*n))
-b = np.zeros(4*n)
+            denominator = matrix[i][0] - matrix[i - j + 1][0]
 
-for i in range(n):
-    # Add the equations for the ith cubic polynomial to the matrix A and vector b
-    A[4*i, 4*i:4*i+4] = np.array([x[i]**3, x[i]**2, x[i], 1])
-    A[4*i+1, 4*i:4*i+4] = np.array([x[i+1]**3, x[i+1]**2, x[i+1], 1])
-    A[4*i+2, 4*i:4*i+4] = np.array([3*x[i+1]**2, 2*x[i+1], 1, 0])
-    A[4*i+3, 4*i:4*i+4] = np.array([3*x[i+1]**2, 2*x[i+1], 1, 0])
-    b[4*i] = a[i]
-    b[4*i+1] = a[i+1]
-    b[4*i+2] = b[i+1]
-    b[4*i+3] = b[i+1]
+            operation = numerator / denominator
+            matrix[i][j] = operation
+    return matrix
 
-# Solve the system of linear equations to find the coefficients of the cubic polynomials
-x = np.linalg.solve(A, b)
 
-# Print the matrix A, vector b, and vector x
-print("Matrix A:")
-print(A)
-print("Vector b:")
-print(b)
-print("Vector x:")
-print(x)
+def hermite_interpolation(x_points, y_points, slopes):
+    # main difference with hermite's method , using instances with x
 
+    num_of_points = len(x_points)
+    matrix = np.zeros((num_of_points * 2, num_of_points * 2))
+
+    # populate x values
+
+    index = 0
+    for x in range(0, len(matrix), 2):
+        matrix[x][0] = x_points[index]
+        matrix[x + 1][0] = x_points[index]
+        index += 1
+
+    # prepopulate y values
+    index = 0
+    for x in range(0, len(matrix), 2):
+        matrix[x][1] = y_points[index]
+        matrix[x + 1][1] = y_points[index]
+        index += 1
+
+    # prepopulate with derivatives (every other row)
+    index = 0
+    for x in range(1, len(matrix), 2):
+        matrix[x][2] = slopes[index]
+        index += 1
+
+    apply_div_diff(matrix)
+    print(matrix)
+
+x_points = [3.6, 3.8, 3.9]
+y_points = [1.675, 1.436, 1.318]
+slopes = [-1.195, -1.188, -1.182]
+hermite_interpolation(x_points, y_points, slopes)
+
+print("\n ---------------5-------------------- \n")
+
+def cubic_spline_interpolation(x_points, y_points):
+    size = len(x_points)
+    matrix = np.zeros((size, size))
+    matrix[0][0] = matrix[size - 1][size - 1] = 1
+
+    for i in range(1, size - 1):
+        index = i - 1
+        for j in range(index, size, 2):
+            matrix[i][j] = x_points[index + 1] - x_points[index]
+            index += 1
+
+    for i in range(1, size - 1):
+        matrix[i][i] = 2 * ((x_points[i + 1] - x_points[i]) + (x_points[i] - x_points[i - 1]))
+
+    print(np.matrix(matrix), "\n")
+
+    spline_condition = np.zeros((size))
+
+    for i in range (1, size - 1):
+        first_term = (3 / (x_points[i + 1] - x_points[i])) * (y_points[i + 1] - y_points[i])
+        second_term = (3 / (x_points[i] - x_points[i - 1])) * (y_points[i] - y_points[i - 1])
+        spline_condition[i] = first_term - second_term
+
+    print(np.array(spline_condition), "\n")
+    print(np.array(np.linalg.solve(matrix, spline_condition)))
+
+x_points, y_points = [2, 5, 8, 10], [3, 5, 7, 9]
+cubic_spline_interpolation(x_points, y_points)
